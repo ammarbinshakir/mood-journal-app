@@ -1,0 +1,91 @@
+name: Flutter CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      # Set up Flutter environment
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+          cache: true
+
+      # Get all dependencies
+      - name: Get dependencies
+        run: flutter pub get
+
+      # Analyze Dart code for errors
+      - name: Analyze project source
+        run: flutter analyze
+
+      # Run tests
+      - name: Run tests
+        run: flutter test
+
+      # Build web version
+      - name: Build web
+        run: flutter build web --release
+
+      # Build Android APK
+      - name: Build Android APK
+        run: flutter build apk --release
+
+      # Upload artifacts
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: release-apk
+          path: build/app/outputs/flutter-apk/app-release.apk
+
+      - name: Upload Web Build
+        uses: actions/upload-artifact@v3
+        with:
+          name: web-build
+          path: build/web/
+
+  # Optional: Deployment job for TestFlight
+  deploy_ios:
+    name: Deploy iOS to TestFlight
+    needs: build
+    runs-on: macos-latest
+    # Only run on tagged releases
+    if: startsWith(github.ref, 'refs/tags/v')
+    
+    steps:
+      - uses: actions/checkout@v3
+
+      # Set up Flutter environment
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+          cache: true
+
+      # Get dependencies
+      - name: Get dependencies
+        run: flutter pub get
+
+      # Build iOS IPA
+      - name: Build iOS
+        run: |
+          flutter build ios --release --no-codesign
+          cd ios
+          xcodebuild -workspace Runner.xcworkspace -scheme Runner -configuration Release -archivePath Runner.xcarchive archive
+          xcodebuild -exportArchive -archivePath Runner.xcarchive -exportPath build/ios/ipa -exportOptionsPlist ExportOptions.plist
+
+      # Note: This is a placeholder. In a real scenario, you would:
+      # - Use proper code signing
+      # - Use App Store Connect API for TestFlight upload
+      # - Configure secrets in GitHub repository settings
