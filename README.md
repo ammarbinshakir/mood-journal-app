@@ -1,32 +1,43 @@
 # MoodJournal Flutter App
 
-A Flutter application for tracking mood and journaling, built for a technical assessment.
+A Flutter application for tracking mood and journaling, built for a technical assessment. The app helps users maintain their mental wellness by tracking moods, journaling thoughts, and receiving AI-powered insights.
 
-![Mood Journal App](https://placekitten.com/500/300)
+<!-- Banner image will go here -->
 
 ## Features
 
 ### Core Features
 - **Authentication**: Email/password login and registration with Firebase (mock implementation included)
-- **Mood Tracking**: Log daily moods (happy, neutral, sad) with timestamps
-- **Journal Entries**: Add, edit, and delete journal entries
+- **Mood Tracking**: Log daily moods (happy, neutral, sad, angry, anxious) with timestamps
+- **Journal Entries**: Add, edit, and delete journal entries with rich text formatting
 - **AI Journaling Assistant**: Get personalized writing prompts, insights, and mood improvement suggestions
-- **Gamification**: Earn points and badges for consistent usage
+- **Badge System**: Earn badges for milestones like:
+  - Beginner Journalist (5+ journal entries)
+  - Emotion Tracker (7 consecutive days of mood tracking)
+  - Deep Thinker (10+ journal entries)
+  - Consistency Champion (14+ days of consistent usage)
+  - Journaling Master (30+ journal entries)
+- **Points System**: Earn points for every interaction to track your progress
 - **Offline Mode**: Full functionality even without internet connection
 - **API Integration**: Secure REST API calls with token-based authentication and error handling
 
 ### Technical Highlights
 - **State Management**: Provider pattern for efficient state handling
 - **Clean Architecture**: Separation of concerns with services, providers, and UI
-- **Mock Implementation**: Fully functional without backend setup using mock data
+- **Mock Implementation**: Fully functional without backend setup using SharedPreferences for data persistence
 - **Error Handling**: Comprehensive error catching and user feedback
 - **Responsive Design**: Works on various screen sizes
+- **Dark Mode**: Customizable theme with dark mode support
+- **Safe Data Handling**: Proper handling of asynchronous operations and navigation
 
 ## Screenshots
 
-| Login Screen | Home Screen | Mood Tracker | Profile |
-|---|---|---|---|
-| ![Login](https://placekitten.com/200/400) | ![Home](https://placekitten.com/200/401) | ![Tracker](https://placekitten.com/200/402) | ![Profile](https://placekitten.com/200/403) |
+Screenshots of the key app screens will be included here:
+
+- Journal Screen - Where users can view, add, edit and delete journal entries
+- Mood Tracker - For recording and visualizing mood over time
+- AI Assistant - Providing insights and writing prompts
+- Profile Screen - Showing user statistics, badges, and settings
 
 ## Getting Started
 
@@ -79,22 +90,27 @@ The app demonstrates secure API integration with:
 - Error handling and retries
 - Offline cache for uninterrupted usage
 
-## CI/CD Pipeline
+## Deployment Guide
 
-A GitHub Actions workflow is included for:
-- Code quality checks
-- Automated testing
-- Building for iOS and Android platforms
+The app is ready for deployment to both Android and iOS platforms:
 
-See `.github/workflows/flutter.yml` for implementation details.
+### Android Deployment
+1. Update the version in `pubspec.yaml`
+2. Generate a signing key using `keytool` if you haven't already
+3. Configure signing in `android/app/build.gradle`
+4. Build release APK: `flutter build apk --release`
+5. Test the APK on target devices
+6. Upload to Google Play Console for distribution
 
-## Deployment
+### iOS Deployment
+1. Update the version in `pubspec.yaml`
+2. Configure signing certificates in Xcode
+3. Build for iOS: `flutter build ios --release`
+4. Archive the build in Xcode
+5. Upload to TestFlight for testing
+6. Submit for App Store review
 
-The app is configured for deployment to:
-- Google Play Store (internal testing)
-- Apple TestFlight
-
-Detailed deployment documentation is available in the `deployment/` directory.
+Detailed deployment documentation is available in the `deployment/deployment_guide.md` file.
 
 ## AI Assistant Features
 
@@ -105,11 +121,30 @@ The AI Journaling Assistant offers several helpful features:
 - **Mood Pattern Recognition**: Identify trends in your mood over time
 - **Activity Recommendations**: Get suggestions for activities that may improve your mood
 
+## Recent Updates
+
+- Fixed journal entry deletion crash
+- Improved badge awarding logic to strictly enforce requirements
+- Enhanced UI for badges display
+- Improved profile screen data refresh
+- Fixed point calculation and tracking
+
 ## Future Enhancements
 
-- Video call feature using Agora SDK
+- Social sharing of mood insights
 - Enhanced analytics and reporting
 - Cloud synchronization
+- Customizable journal templates
+- Multilanguage support
+
+## Troubleshooting
+
+If you encounter any issues:
+
+1. Ensure you have the latest Flutter SDK installed
+2. Run `flutter clean` followed by `flutter pub get`
+3. Check for any specific error messages in the console
+4. For persistent issues, please open an issue on the GitHub repository
 
 ## License
 
@@ -117,4 +152,4 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-For questions or feedback, please contact: your.email@example.com
+For questions or feedback about this technical assessment submission, please contact me at ammarbinshakir557@gmail.com
