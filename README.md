@@ -2,8 +2,6 @@
 
 A Flutter application for tracking mood and journaling, built for a technical assessment. The app helps users maintain their mental wellness by tracking moods, journaling thoughts, and receiving AI-powered insights.
 
-<!-- Banner image will go here -->
-
 ## Features
 
 ### Core Features
@@ -32,12 +30,11 @@ A Flutter application for tracking mood and journaling, built for a technical as
 
 ## Screenshots
 
-Screenshots of the key app screens will be included here:
+| Journal | Mood Tracker | AI Assistant | Profile |
+|---|---|---|---|
+| ![Journal](assets/images/journal.jpeg) | ![Mood](assets/images/mood%20tracker.jpeg) | ![AI](assets/images/ai%20assistant.jpeg) | ![Profile](assets/images/profile.jpeg) |
 
-- Journal Screen - Where users can view, add, edit and delete journal entries
-- Mood Tracker - For recording and visualizing mood over time
-- AI Assistant - Providing insights and writing prompts
-- Profile Screen - Showing user statistics, badges, and settings
+The app features a clean, intuitive interface designed for daily journaling and mood tracking.
 
 ## Getting Started
 
