@@ -15,11 +15,11 @@ class EntryDetailScreen extends StatelessWidget {
     final entry = journalProvider.selectedEntry;
     
     if (entry == null) {
-      // Navigate back if no entry is selected
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        Navigator.pop(context);
-      });
-      return const SizedBox.shrink();
+      // Just show a placeholder if no entry is selected
+      return Scaffold(
+        appBar: AppBar(title: const Text('Entry Details')),
+        body: const Center(child: Text('No entry selected')),
+      );
     }
     
     // Get mood emoji
@@ -81,18 +81,24 @@ class EntryDetailScreen extends StatelessWidget {
                 
                 if (confirm == true) {
                   try {
+                    // Delete the entry
                     final success = await journalProvider.deleteJournalEntry(entry.id);
                     
-                    if (success && context.mounted) {
-                      // Show success message and navigate back
+                    // Only proceed if context is still mounted
+                    if (!context.mounted) return;
+                    
+                    if (success) {
+                      // Show success message
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(
                           content: Text('Journal entry deleted successfully'),
                           backgroundColor: Colors.green,
                         ),
                       );
-                      Navigator.pop(context);
-                    } else if (context.mounted) {
+                      
+                      // Pop only once after successful deletion
+                      Navigator.of(context).pop();
+                    } else {
                       // Show error message
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(

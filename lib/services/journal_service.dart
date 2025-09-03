@@ -145,6 +145,9 @@ class JournalService {
           
           // Save the updated list back to SharedPreferences
           await prefs.setString('journal_entries_$userId', json.encode(filteredEntries));
+          
+          // Update user points and badges after deletion
+          await _updateUserPoints(userId);
         } catch (jsonError) {
           // Handle JSON parsing errors gracefully
           print('Error parsing journal entries JSON: $jsonError');
