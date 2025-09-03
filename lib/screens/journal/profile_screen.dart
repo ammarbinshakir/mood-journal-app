@@ -5,6 +5,7 @@ import 'package:mood_journal_app/providers/auth_provider.dart';
 import 'package:mood_journal_app/providers/journal_provider.dart';
 import 'package:mood_journal_app/widgets/loading_overlay.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -13,7 +14,7 @@ class ProfileScreen extends StatefulWidget {
   State<ProfileScreen> createState() => _ProfileScreenState();
 }
 
-class _ProfileScreenState extends State<ProfileScreen> {
+class _ProfileScreenState extends State<ProfileScreen> with WidgetsBindingObserver {
   List<String> _userBadges = [];
   int _userPoints = 0;
   int _totalEntries = 0;
@@ -26,10 +27,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    // Schedule this for after the first frame to ensure context is available
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadJournalDataAndStats();
+    });
+  }
+  
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+  
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
     _loadUserStats();
   }
   
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _loadUserStats();
+    }
+  }
+  
+  // First ensure journal data is loaded, then load stats
+  Future<void> _loadJournalDataAndStats() async {
+    setState(() {
+      _isLoading = true;
+    });
+    
+    try {
+      final journalProvider = Provider.of<JournalProvider>(context, listen: false);
+      
+      // Ensure journal data is loaded
+      await journalProvider.loadJournalEntries();
+      await journalProvider.loadMoodEntries();
+      
+      // Then load stats
+      await _loadUserStats();
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+  
   Future<void> _loadUserStats() async {
+    if (!mounted) return;
+    
     setState(() {
       _isLoading = true;
     });
@@ -39,8 +87,47 @@ class _ProfileScreenState extends State<ProfileScreen> {
       final journalProvider = Provider.of<JournalProvider>(context, listen: false);
       
       final prefs = await SharedPreferences.getInstance();
-      final badges = prefs.getStringList('user_badges_${authProvider.userId}') ?? [];
+      
+      // Make sure to load fresh data from SharedPreferences
+      List<String> badges;
+      
+      // Try to get badges as StringList first
+      final badgesList = prefs.getStringList('user_badges_${authProvider.userId}');
+      if (badgesList != null) {
+        badges = badgesList;
+      } else {
+        // Fall back to JSON string if StringList is not available
+        final badgesJson = prefs.getString('user_badges_${authProvider.userId}') ?? '[]';
+        try {
+          badges = List<String>.from(json.decode(badgesJson));
+        } catch (e) {
+          badges = [];
+          print('Error parsing badges JSON: $e');
+        }
+      }
+      
+      // Force badge update based on current points (in case badge check was missed)
       final points = prefs.getInt('user_points_${authProvider.userId}') ?? 0;
+      
+      // Try to update badges based on current stats
+      await journalProvider.updateUserPointsAndBadges();
+      
+      // Reload badges after forced update
+      final updatedBadgesList = prefs.getStringList('user_badges_${authProvider.userId}');
+      if (updatedBadgesList != null) {
+        badges = updatedBadgesList;
+      } else {
+        // Try JSON format again
+        final badgesJson = prefs.getString('user_badges_${authProvider.userId}') ?? '[]';
+        try {
+          badges = List<String>.from(json.decode(badgesJson));
+          print('Reloaded badges from JSON: ${badges.length} badges');
+        } catch (e) {
+          print('Error reloading badges: $e');
+        }
+      }
+      
+      if (!mounted) return;
       
       setState(() {
         _userBadges = badges;
@@ -49,10 +136,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         _totalMoods = journalProvider.moods.length;
         _isLoading = false;
       });
+      
+      // Print debug info
+      print('User Stats: Entries=${_totalEntries}, Moods=${_totalMoods}, Badges=${_userBadges.length}');
     } catch (e) {
+      if (!mounted) return;
+      
       setState(() {
         _isLoading = false;
       });
+      print('Error loading user stats: $e');
     }
   }
   
@@ -205,6 +298,24 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             const SizedBox(height: 16),
             
+            // Only show earned badges if there are any
+            if (userBadgeDetails.isNotEmpty) ...[
+              Text(
+                'Earned Badges',
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              const SizedBox(height: 16),
+              Wrap(
+                alignment: WrapAlignment.start,
+                spacing: 16,
+                runSpacing: 16,
+                children: userBadgeDetails
+                    .map((badge) => _buildBadgeItem(badge, false))
+                    .toList(),
+              ),
+            ],
+            
+            // Show "No badges earned" message only if no badges are earned
             if (userBadgeDetails.isEmpty)
               const Center(
                 child: Padding(
@@ -214,31 +325,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     textAlign: TextAlign.center,
                   ),
                 ),
-              )
-            else
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: userBadgeDetails
-                    .map((badge) => _buildBadgeItem(badge, false))
-                    .toList(),
               ),
             
-            if (lockedBadges.isNotEmpty) ...[
-              const SizedBox(height: 24),
-              Text(
-                'Badges to Earn',
-                style: Theme.of(context).textTheme.titleMedium,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 16,
-                runSpacing: 16,
-                children: lockedBadges
-                    .map((badge) => _buildBadgeItem(badge, true))
-                    .toList(),
-              ),
-            ],
+            // Always show badges to earn section with a title
+            const SizedBox(height: 24),
+            Text(
+              'Badges to Earn',
+              style: Theme.of(context).textTheme.titleMedium,
+            ),
+            const SizedBox(height: 16),
+            Wrap(
+              alignment: WrapAlignment.start,
+              spacing: 16,
+              runSpacing: 16,
+              children: lockedBadges
+                  .map((badge) => _buildBadgeItem(badge, true))
+                  .toList(),
+            ),
           ],
         ),
       ),
@@ -284,43 +387,50 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
         );
       },
-      child: Column(
-        children: [
-          Container(
-            width: 70,
-            height: 70,
-            decoration: BoxDecoration(
-              color: locked
-                  ? Colors.grey.shade300
-                  : Theme.of(context).colorScheme.primaryContainer,
-              shape: BoxShape.circle,
-              border: Border.all(
+      child: SizedBox(
+        width: 100, // Fixed width for consistent alignment
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
                 color: locked
-                    ? Colors.grey
-                    : Theme.of(context).colorScheme.primary,
-                width: 2,
+                    ? Colors.grey.shade300
+                    : Theme.of(context).colorScheme.primaryContainer,
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: locked
+                      ? Colors.grey
+                      : Theme.of(context).colorScheme.primary,
+                  width: 2,
+                ),
               ),
-            ),
-            child: Center(
-              child: Text(
-                badge.icon,
-                style: TextStyle(
-                  fontSize: 32,
-                  color: locked ? Colors.grey : null,
+              child: Center(
+                child: Text(
+                  badge.icon,
+                  style: TextStyle(
+                    fontSize: 32,
+                    color: locked ? Colors.grey : null,
+                  ),
                 ),
               ),
             ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            badge.name,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: locked ? Colors.grey : null,
+            const SizedBox(height: 8),
+            Text(
+              badge.name,
+              style: TextStyle(
+                fontSize: 12, // Smaller text for name
+                fontWeight: FontWeight.bold,
+                color: locked ? Colors.grey : null,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
-            textAlign: TextAlign.center,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

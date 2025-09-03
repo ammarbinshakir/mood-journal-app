@@ -29,6 +29,12 @@ class JournalProvider with ChangeNotifier {
   JournalEntry? get selectedEntry => _selectedEntry;
   bool get isLoading => _isLoading;
   String? get error => _error;
+  JournalService get journalService => _journalService;
+  
+  // Update user points and badges
+  Future<void> updateUserPointsAndBadges() async {
+    await _journalService.updateUserPoints(_userId);
+  }
   
   // Clear error state
   void clearError() {

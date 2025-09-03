@@ -58,7 +58,7 @@ final List<Badge> predefinedBadges = [
     requiredPoints: 10,
   ),
   Badge(
-    id: 'consistency_king',
+    id: 'consistency_champion',
     name: 'Consistency Champion',
     description: 'Added an entry every day for 2 weeks',
     icon: '👑',

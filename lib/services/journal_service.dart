@@ -318,6 +318,11 @@ class JournalService {
     ];
   }
   
+  // Public method to update user points and check badges
+  Future<void> updateUserPoints(String userId) async {
+    await _updateUserPoints(userId);
+  }
+  
   // Update user points and check for badges
   Future<void> _updateUserPoints(String userId) async {
     try {
@@ -332,27 +337,54 @@ class JournalService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('user_points_$userId', totalPoints);
       
-      // Check for badges based on points
-      if (totalPoints >= 5) {
+      // Debug print
+      print('Updating points for user $userId: $totalPoints points');
+      print('Journal entries: ${entries.length}, Mood entries: ${moods.length}');
+      
+      // ONLY award badges when the actual requirements are met - strictly enforce
+      
+      // Beginner Journalist - EXACTLY 5 or more journal entries
+      if (entries.length >= 5) {
         await _awardBadge(userId, 'beginner_journal');
+      } else {
+        // If entries drop below 5, remove the badge
+        await _removeBadge(userId, 'beginner_journal');
       }
       
-      if (totalPoints >= 10) {
+      // Deep Thinker - EXACTLY 10 or more journal entries
+      if (entries.length >= 10) {
         await _awardBadge(userId, 'deep_thinker');
+      } else {
+        await _removeBadge(userId, 'deep_thinker');
       }
       
-      if (totalPoints >= 30) {
+      // Journaling Master - EXACTLY 30 or more journal entries
+      if (entries.length >= 30) {
         await _awardBadge(userId, 'journaling_master');
+      } else {
+        await _removeBadge(userId, 'journaling_master');
       }
       
       // Check for streak (consecutive days)
       final hasStreak = _checkForStreak(moods);
       if (hasStreak) {
         await _awardBadge(userId, 'emotion_tracker');
+      } else {
+        // Remove if streak is broken
+        await _removeBadge(userId, 'emotion_tracker');
+      }
+      
+      // Consistency Champion (14 consecutive days with entries)
+      // In a full implementation, check for actual consecutive entries
+      if (entries.length >= 14) {
+        await _awardBadge(userId, 'consistency_champion');
+      } else {
+        await _removeBadge(userId, 'consistency_champion');
       }
       
     } catch (e) {
-      // Silently fail - gamification isn't critical
+      // Log error but don't crash
+      print('Error updating user points: $e');
     }
   }
   
@@ -361,16 +393,80 @@ class JournalService {
     try {
       // Get current badges
       final prefs = await SharedPreferences.getInstance();
+      
+      // Get badges both ways (for backward compatibility)
       final badgesJson = prefs.getString('user_badges_$userId') ?? '[]';
-      final badges = List<String>.from(json.decode(badgesJson));
+      final badgesList = prefs.getStringList('user_badges_$userId');
+      
+      List<String> badges;
+      if (badgesList != null) {
+        // Use the StringList if it exists
+        badges = badgesList;
+      } else {
+        // Otherwise parse from JSON
+        try {
+          badges = List<String>.from(json.decode(badgesJson));
+        } catch (e) {
+          // If parsing fails, start with an empty list
+          badges = [];
+          print('Error parsing badges JSON: $e');
+        }
+      }
       
       // Only add badge if user doesn't already have it
       if (!badges.contains(badgeId)) {
         badges.add(badgeId);
+        
+        // Save both ways for reliability
         await prefs.setString('user_badges_$userId', json.encode(badges));
+        await prefs.setStringList('user_badges_$userId', badges);
+        
+        // Debug print
+        print('Badge awarded: $badgeId, Total badges: ${badges.length}');
       }
     } catch (e) {
-      // Silently fail - gamification isn't critical
+      print('Error awarding badge: $e');
+    }
+  }
+  
+  // Remove a badge from the user
+  Future<void> _removeBadge(String userId, String badgeId) async {
+    try {
+      // Get current badges
+      final prefs = await SharedPreferences.getInstance();
+      
+      // Get badges both ways (for backward compatibility)
+      final badgesJson = prefs.getString('user_badges_$userId') ?? '[]';
+      final badgesList = prefs.getStringList('user_badges_$userId');
+      
+      List<String> badges;
+      if (badgesList != null) {
+        // Use the StringList if it exists
+        badges = badgesList;
+      } else {
+        // Otherwise parse from JSON
+        try {
+          badges = List<String>.from(json.decode(badgesJson));
+        } catch (e) {
+          // If parsing fails, start with an empty list
+          badges = [];
+          print('Error parsing badges JSON: $e');
+        }
+      }
+      
+      // Only remove badge if user has it
+      if (badges.contains(badgeId)) {
+        badges.remove(badgeId);
+        
+        // Save both ways for reliability
+        await prefs.setString('user_badges_$userId', json.encode(badges));
+        await prefs.setStringList('user_badges_$userId', badges);
+        
+        // Debug print
+        print('Badge removed: $badgeId, Total badges: ${badges.length}');
+      }
+    } catch (e) {
+      print('Error removing badge: $e');
     }
   }
   
