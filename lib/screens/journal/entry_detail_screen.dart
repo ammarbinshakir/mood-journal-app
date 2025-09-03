@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:mood_journal_app/providers/journal_provider.dart';
 import 'package:mood_journal_app/screens/journal/add_entry_screen.dart';
 import 'package:mood_journal_app/widgets/loading_overlay.dart';
+import 'package:mood_journal_app/widgets/entry_analysis_widget.dart';
 
 class EntryDetailScreen extends StatelessWidget {
   const EntryDetailScreen({super.key});
@@ -160,6 +161,10 @@ class EntryDetailScreen extends StatelessWidget {
                 entry.content,
                 style: Theme.of(context).textTheme.bodyLarge,
               ),
+              const SizedBox(height: 32),
+              
+              // AI Analysis
+              EntryAnalysisWidget(entry: entry),
             ],
           ),
         ),

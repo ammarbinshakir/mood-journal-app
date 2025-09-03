@@ -4,6 +4,7 @@ import 'package:mood_journal_app/models/mood_entry.dart';
 import 'package:mood_journal_app/providers/auth_provider.dart';
 import 'package:mood_journal_app/providers/journal_provider.dart';
 import 'package:mood_journal_app/screens/journal/add_entry_screen.dart';
+import 'package:mood_journal_app/screens/journal/ai_assistant_screen.dart';
 import 'package:mood_journal_app/screens/journal/entry_detail_screen.dart';
 import 'package:mood_journal_app/screens/journal/mood_tracker_screen.dart';
 import 'package:mood_journal_app/screens/journal/profile_screen.dart';
@@ -20,7 +21,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _selectedIndex = 0;
-  final List<String> _screenTitles = ['Journal', 'Mood Tracker', 'Profile'];
+  final List<String> _screenTitles = ['Journal', 'Mood Tracker', 'AI Assistant', 'Profile'];
   
   @override
   Widget build(BuildContext context) {
@@ -30,6 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final screens = [
       _buildJournalTab(journalProvider),
       const MoodTrackerScreen(),
+      const AIAssistantScreen(),
       const ProfileScreen(),
     ];
     
@@ -98,6 +100,9 @@ class _HomeScreenState extends State<HomeScreen> {
               _selectedIndex = index;
             });
           },
+          type: BottomNavigationBarType.fixed, // This ensures all 4 items display properly
+          selectedItemColor: Theme.of(context).colorScheme.primary,
+          unselectedItemColor: Colors.grey,
           items: const [
             BottomNavigationBarItem(
               icon: Icon(Icons.book),
@@ -106,6 +111,10 @@ class _HomeScreenState extends State<HomeScreen> {
             BottomNavigationBarItem(
               icon: Icon(Icons.mood),
               label: 'Mood',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.psychology),
+              label: 'AI Assistant',
             ),
             BottomNavigationBarItem(
               icon: Icon(Icons.person),

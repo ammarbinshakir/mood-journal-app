@@ -8,10 +8,12 @@ import 'package:mood_journal_app/widgets/loading_overlay.dart';
 
 class AddEntryScreen extends StatefulWidget {
   final JournalEntry? entryToEdit;
+  final String? promptText;
 
   const AddEntryScreen({
     super.key,
     this.entryToEdit,
+    this.promptText,
   });
 
   @override
@@ -33,6 +35,9 @@ class _AddEntryScreenState extends State<AddEntryScreen> {
       _titleController.text = widget.entryToEdit!.title;
       _contentController.text = widget.entryToEdit!.content;
       _selectedMood = widget.entryToEdit!.mood;
+    } else if (widget.promptText != null) {
+      // If there's a writing prompt, add it to the content
+      _contentController.text = "Prompt: ${widget.promptText}\n\nMy thoughts:\n";
     }
   }
 

@@ -10,6 +10,7 @@ A Flutter application for tracking mood and journaling, built for a technical as
 - **Authentication**: Email/password login and registration with Firebase (mock implementation included)
 - **Mood Tracking**: Log daily moods (happy, neutral, sad) with timestamps
 - **Journal Entries**: Add, edit, and delete journal entries
+- **AI Journaling Assistant**: Get personalized writing prompts, insights, and mood improvement suggestions
 - **Gamification**: Earn points and badges for consistent usage
 - **Offline Mode**: Full functionality even without internet connection
 - **API Integration**: Secure REST API calls with token-based authentication and error handling
@@ -95,10 +96,18 @@ The app is configured for deployment to:
 
 Detailed deployment documentation is available in the `deployment/` directory.
 
+## AI Assistant Features
+
+The AI Journaling Assistant offers several helpful features:
+
+- **Personalized Writing Prompts**: Get tailored writing suggestions based on your current mood
+- **Journal Entry Analysis**: Receive insights about the emotional tone of your entries
+- **Mood Pattern Recognition**: Identify trends in your mood over time
+- **Activity Recommendations**: Get suggestions for activities that may improve your mood
+
 ## Future Enhancements
 
 - Video call feature using Agora SDK
-- AI journaling assistant for mood analysis
 - Enhanced analytics and reporting
 - Cloud synchronization
 
